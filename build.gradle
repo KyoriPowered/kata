@@ -30,6 +30,22 @@ license {
 repositories {
   mavenLocal()
   mavenCentral()
+  maven {
+    url 'https://oss.sonatype.org/content/groups/public/'
+  }
+}
+
+dependencies {
+  api 'com.google.guava:guava:27.0-jre'
+  api 'net.kyori:lambda:1.0.0-SNAPSHOT'
+  api 'net.kyori:string:1.0.0-SNAPSHOT'
+  api 'org.checkerframework:checker-qual:2.5.7'
+  testCompile 'com.google.truth:truth:0.42'
+  testCompile 'com.google.truth.extensions:truth-java8-extension:0.42'
+  testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+  testCompile 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
+  testCompile 'org.mockito:mockito-core:2.23.4'
+  testCompile 'org.mockito:mockito-junit-jupiter:2.23.4'
 }
 
 task javadocJar(type: Jar) {

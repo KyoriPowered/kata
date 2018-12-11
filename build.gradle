@@ -36,7 +36,7 @@ repositories {
 }
 
 dependencies {
-  api 'com.google.guava:guava:27.0-jre'
+  api 'com.google.guava:guava:21.0'
   api 'net.kyori:lambda:1.0.0-SNAPSHOT'
   api 'net.kyori:string:1.0.0-SNAPSHOT'
   api 'org.checkerframework:checker-qual:2.5.7'

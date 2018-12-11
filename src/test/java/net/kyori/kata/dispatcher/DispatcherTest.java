@@ -102,7 +102,7 @@ class DispatcherTest {
     final AtomicInteger executions = new AtomicInteger();
     this.dispatcher.register(literal("foo").then(
       argument(THING).executes(stack -> {
-        if(stack.argument(THING).equals("a thing")) {
+        if(stack.arguments().require(THING).equals("a thing")) {
           executions.incrementAndGet();
         }
       })

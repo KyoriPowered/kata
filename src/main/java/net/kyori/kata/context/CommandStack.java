@@ -44,18 +44,21 @@ public interface CommandStack {
   @NonNull CommandContext context();
 
   /**
-   * Gets an argument.
+   * Gets the arguments.
    *
-   * @param argument the argument key
-   * @param <V> the argument type
-   * @return the argument
+   * @return the arguments
    */
-  <V> @NonNull V argument(final @NonNull Argument<V> argument);
+  @NonNull CommandArguments arguments();
 
   /**
    * A command stack builder.
    */
   interface Builder {
+    /**
+     * Gets the literal range.
+     *
+     * @return the literal range
+     */
     @NonNull StringRange literalRange();
 
     /**

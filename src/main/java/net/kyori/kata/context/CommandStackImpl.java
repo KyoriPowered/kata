@@ -23,22 +23,24 @@
  */
 package net.kyori.kata.context;
 
+import com.google.common.collect.ImmutableMap;
 import net.kyori.kata.argument.Argument;
+import net.kyori.lambda.Maybe;
 import net.kyori.string.StringRange;
 import net.kyori.string.StringReader;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 final class CommandStackImpl implements CommandStack {
   private final CommandContext context;
-  private final Map<Argument<?>, ParsedArgument<?>> arguments;
+  private final CommandArguments arguments;
 
-  private CommandStackImpl(final Builder builder) {
-    this.context = builder.context;
-    this.arguments = builder.arguments;
+  private CommandStackImpl(final CommandContext context, final CommandArguments arguments) {
+    this.context = context;
+    this.arguments = arguments;
   }
 
   @Override
@@ -47,18 +49,50 @@ final class CommandStackImpl implements CommandStack {
   }
 
   @Override
-  public <V> @NonNull V argument(final @NonNull Argument<V> name) {
-    final ParsedArgument<?> argument = this.arguments.get(name);
+  public @NonNull CommandArguments arguments() {
+    return this.arguments;
+  }
 
-    if(argument == null) {
-      throw new IllegalArgumentException("No such argument '" + name + "' exists on this command");
+  static class CommandArgumentsImpl implements CommandArguments {
+    private final Map<Argument<?>, ParsedArgument<?>> arguments;
+
+    CommandArgumentsImpl(final Map<Argument<?>, ParsedArgument<?>> arguments) {
+      this.arguments = arguments;
     }
 
-    return (V) argument.result;
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NonNull <V> Maybe<V> find(final @NonNull Argument<V> key) {
+      final ParsedArgument<?> argument = this.arguments.get(key);
+      if(argument != null) {
+        return Maybe.just((V) argument.result);
+      }
+      return Maybe.nothing();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <V> @NonNull V require(final @NonNull Argument<V> key) {
+      final ParsedArgument<?> argument = this.arguments.get(key);
+      if(argument != null) {
+        return (V) argument.result;
+      }
+      throw new IllegalArgumentException("No such argument '" + key + "' exists on this command");
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <V> @NonNull V get(final @NonNull Argument<V> key, @NonNull final V defaultValue) {
+      final ParsedArgument<?> argument = this.arguments.get(key);
+      if(argument != null) {
+        return (V) argument.result;
+      }
+      return defaultValue;
+    }
   }
 
   static final class Builder implements CommandStack.Builder {
-    final Map<Argument<?>, ParsedArgument<?>> arguments = new LinkedHashMap<>();
+    final Map<Argument<?>, ParsedArgument<?>> arguments = new HashMap<>();
     final CommandContext context;
     StringRange literalRange;
 
@@ -98,7 +132,7 @@ final class CommandStackImpl implements CommandStack {
 
     @Override
     public @NonNull CommandStack build() {
-      return new CommandStackImpl(this);
+      return new CommandStackImpl(this.context, new CommandArgumentsImpl(ImmutableMap.copyOf(this.arguments)));
     }
   }
 

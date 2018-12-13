@@ -109,6 +109,21 @@ abstract class NodeImpl<N extends Node> implements Node {
   }
 
   @Override
+  public void remove(final @NonNull String name) {
+    if(this.nodes != null) {
+      this.nodes.remove(name);
+    }
+
+    if(this.literals != null) {
+      this.literals.remove(name);
+    }
+
+    if(this.arguments != null) {
+      this.arguments.remove(name);
+    }
+  }
+
+  @Override
   public @NonNull Stream<? extends ExaminableProperty> examinableProperties() {
     return Stream.of(ExaminableProperty.of("nodes", this.nodes));
   }

@@ -44,6 +44,16 @@ class NodeTest {
   }
 
   @Test
+  void testAddRemove() {
+    final RootNode root = root();
+    assertThat(root.children()).isEmpty();
+    root.add(literal("foo"));
+    assertThat(root.children()).hasSize(1);
+    root.remove("foo");
+    assertThat(root.children()).isEmpty();
+  }
+
+  @Test
   void testAdd_replaceExecutable() {
     assertThrows(UnsupportedOperationException.class, () -> root()
       .add(literal("foo").executes(stack -> {

@@ -96,4 +96,11 @@ public interface Node extends Examinable {
    * @return this node
    */
   @NonNull Node add(final @NonNull ChildNode node);
+
+  /**
+   * Removes a child.
+   *
+   * @param name the child name
+   */
+  void remove(final @NonNull String name);
 }

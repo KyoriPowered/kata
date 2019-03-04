@@ -28,7 +28,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.stream.Stream;
 
-final class LiteralNodeImpl extends ChildNodeImpl<LiteralNode> implements LiteralNode {
+final class LiteralNodeImpl extends ExecutableNodeImpl<LiteralNode> implements LiteralNode {
   private final String name;
 
   private LiteralNodeImpl(final Builder builder) {
@@ -54,7 +54,7 @@ final class LiteralNodeImpl extends ChildNodeImpl<LiteralNode> implements Litera
     );
   }
 
-  static final class Builder extends ChildNodeImpl.Builder<LiteralNode, LiteralNode.Builder> implements LiteralNode.Builder {
+  static final class Builder extends ExecutableNodeImpl.Builder<LiteralNode, LiteralNode.Builder> implements LiteralNode.Builder {
     private final String name;
 
     Builder(final @NonNull String name) {

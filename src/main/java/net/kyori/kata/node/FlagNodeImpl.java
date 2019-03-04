@@ -23,8 +23,6 @@
  */
 package net.kyori.kata.node;
 
-import net.kyori.kata.Usage;
-import net.kyori.kata.argument.Argument;
 import net.kyori.kata.context.CommandContext;
 import net.kyori.kata.context.CommandStack;
 import net.kyori.kata.exception.CommandException;
@@ -35,54 +33,57 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.stream.Stream;
 
-final class ArgumentNodeImpl<T> extends ExecutableNodeImpl<ArgumentNode> implements ArgumentNode {
-  private final Argument<T> argument;
+final class FlagNodeImpl extends ChildNodeImpl<FlagNode> implements FlagNode {
+  private final char flag;
 
-  private ArgumentNodeImpl(final Builder<T> builder) {
+  private FlagNodeImpl(final Builder builder) {
     super(builder);
-    this.argument = builder.argument;
+    this.flag = builder.flag;
   }
 
   @Override
   public @NonNull String name() {
-    return this.argument.name();
+    return "-" + this.flag;
   }
 
   @Override
   public @NonNull String usage() {
-    return Usage.ARGUMENT_OPEN + this.argument.name() + Usage.ARGUMENT_CLOSE;
+    return "-" + this.flag;
   }
 
   @Override
   public boolean parse(final CommandStack.@NonNull Builder stack, final @NonNull CommandContext context, final @NonNull StringReader reader) throws CommandException {
-    final int start = reader.index();
-    final T result = this.argument.type().parse(context, reader);
-    final int end = reader.index();
-    stack.argument(this.argument, StringRange.between(start, end), result);
-    return true;
+    final String name = this.name();
+    if(reader.readable(name.length())) {
+      final int start = reader.index();
+      final int end = start + name.length();
+      if(reader.string(StringRange.between(start, end)).equals(name)) {
+        reader.skip(end - start);
+        stack.flag(StringRange.between(start, end), this.flag);
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
   public @NonNull Stream<? extends ExaminableProperty> examinableProperties() {
     return Stream.concat(
-      Stream.of(
-        ExaminableProperty.of("name", this.argument.name()),
-        ExaminableProperty.of("type", this.argument.type())
-      ),
+      Stream.of(ExaminableProperty.of("flag", this.flag)),
       super.examinableProperties()
     );
   }
 
-  static final class Builder<T> extends ExecutableNodeImpl.Builder<ArgumentNode, ArgumentNode.Builder> implements ArgumentNode.Builder {
-    private final Argument<T> argument;
+  static final class Builder extends ChildNodeImpl.Builder<FlagNode, FlagNode.Builder> implements FlagNode.Builder {
+    private final char flag;
 
-    Builder(final @NonNull Argument<T> argument) {
-      this.argument = argument;
+    Builder(final char flag) {
+      this.flag = flag;
     }
 
     @Override
-    @NonNull ArgumentNode create() {
-      return new ArgumentNodeImpl<>(this);
+    @NonNull FlagNode create() {
+      return new FlagNodeImpl(this);
     }
   }
 }

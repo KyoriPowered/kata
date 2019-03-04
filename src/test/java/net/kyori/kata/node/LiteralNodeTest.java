@@ -57,9 +57,9 @@ class LiteralNodeTest {
     final AtomicInteger executions = new AtomicInteger();
     final LiteralNode target = literal("target").executes(stack -> executions.incrementAndGet()).build();
     final LiteralNode literal = literal("test").redirect(target).build();
-    final @Nullable ChildNode redirect = literal.redirect();
+    final @Nullable ExecutableNode redirect = literal.redirect();
     if(redirect != null) {
-      final ChildNode.@Nullable Executable executable = redirect.executable();
+      final ExecutableNode.@Nullable Executable executable = redirect.executable();
       if(executable != null) {
         executable.execute(CommandStack.builder(StringReader.create(""), CommandContext.empty()).build());
       }
@@ -71,7 +71,7 @@ class LiteralNodeTest {
   void testExecutable() throws CommandException {
     final AtomicInteger executions = new AtomicInteger();
     final LiteralNode literal = literal("test").executes(stack -> executions.incrementAndGet()).build();
-    final ChildNode.@Nullable Executable executable = literal.executable();
+    final ExecutableNode.@Nullable Executable executable = literal.executable();
     if(executable != null) {
       executable.execute(CommandStack.builder(StringReader.create(""), CommandContext.empty()).build());
     }

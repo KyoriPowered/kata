@@ -63,20 +63,6 @@ public interface ChildNode extends Node {
   @NonNull String usage();
 
   /**
-   * Gets the redirect.
-   *
-   * @return the redirect
-   */
-  @Nullable ChildNode redirect();
-
-  /**
-   * Gets the executable.
-   *
-   * @return the executable
-   */
-  @Nullable Executable executable();
-
-  /**
    * Parses.
    *
    * @param stack the stack builder
@@ -98,22 +84,6 @@ public interface ChildNode extends Node {
      * @return this builder
      */
     @NonNull B requires(final @NonNull Predicate<CommandContext> requirement);
-
-    /**
-     * Sets the executable.
-     *
-     * @param executable the executable
-     * @return this builder
-     */
-    @NonNull B executes(final @NonNull Executable executable);
-
-    /**
-     * Sets the redirect.
-     *
-     * @param target the target node
-     * @return this builder
-     */
-    @NonNull B redirect(final @NonNull ChildNode target);
 
     /**
      * Adds a child to this node builder.
@@ -161,19 +131,5 @@ public interface ChildNode extends Node {
      * @return the built node
      */
     @NonNull N build();
-  }
-
-  /**
-   * An executable.
-   */
-  @FunctionalInterface
-  interface Executable {
-    /**
-     * Executes.
-     *
-     * @param stack the stack
-     * @throws CommandException if an exception is encountered during execution
-     */
-    void execute(final @NonNull CommandStack stack) throws CommandException;
   }
 }

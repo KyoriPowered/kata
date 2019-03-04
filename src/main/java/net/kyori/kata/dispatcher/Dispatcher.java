@@ -27,6 +27,7 @@ import net.kyori.kata.context.CommandContext;
 import net.kyori.kata.context.CommandStack;
 import net.kyori.kata.exception.CommandException;
 import net.kyori.kata.node.ChildNode;
+import net.kyori.kata.node.ExecutableNode;
 import net.kyori.kata.node.LiteralNode;
 import net.kyori.kata.node.Node;
 import net.kyori.kata.node.RootNode;

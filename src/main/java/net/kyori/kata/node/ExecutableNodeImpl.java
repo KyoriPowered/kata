@@ -24,19 +24,25 @@
 package net.kyori.kata.node;
 
 import net.kyori.kata.context.CommandContext;
+import net.kyori.lambda.examine.ExaminableProperty;
 import net.kyori.lambda.function.MorePredicates;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-abstract class ChildNodeImpl<N extends ChildNode> extends NodeImpl<N> implements ChildNode {
+abstract class ExecutableNodeImpl<N extends ExecutableNode> extends ChildNodeImpl<N> implements ExecutableNode {
   private final Predicate<CommandContext> requirement;
+  private final @Nullable ExecutableNode redirect;
+  @MonotonicNonNull Executable executable;
 
-  ChildNodeImpl(final Builder<N, ?> builder) {
+  ExecutableNodeImpl(final Builder<N, ?> builder) {
+    super(builder);
     this.requirement = builder.requirement;
+    this.redirect = builder.redirect;
+    this.executable = builder.executable;
   }
 
   @Override
@@ -44,8 +50,37 @@ abstract class ChildNodeImpl<N extends ChildNode> extends NodeImpl<N> implements
     return this.requirement.test(context);
   }
 
-  static abstract class Builder<N extends ChildNode, B extends ChildNode.Builder<N, B>> implements ChildNode.Builder<N, B> {
+  @Override
+  public @Nullable ExecutableNode redirect() {
+    return this.redirect;
+  }
+
+  @Override
+  public @Nullable Executable executable() {
+    return this.executable;
+  }
+
+  void executable(final @NonNull Executable executable) {
+    if(this.executable != null) {
+      throw new UnsupportedOperationException("Cannot replace executable");
+    }
+    this.executable = executable;
+  }
+
+  @Override
+  public @NonNull Stream<? extends ExaminableProperty> examinableProperties() {
+    return Stream.concat(
+      Stream.of(
+        ExaminableProperty.of("redirect", this.redirect)
+      ),
+      super.examinableProperties()
+    );
+  }
+
+  static abstract class Builder<N extends ExecutableNode, B extends ExecutableNode.Builder<N, B>> extends ChildNodeImpl.Builder<N, B> implements ExecutableNode.Builder<N, B> {
     @NonNull Predicate<CommandContext> requirement = MorePredicates.alwaysTrue();
+    @MonotonicNonNull Executable executable;
+    @MonotonicNonNull ExecutableNode redirect;
     @MonotonicNonNull RootNode node;
 
     @Override
@@ -57,30 +92,26 @@ abstract class ChildNodeImpl<N extends ChildNode> extends NodeImpl<N> implements
 
     @Override
     @SuppressWarnings("unchecked")
-    public @NonNull B then(final @NonNull ChildNode node, final @Nullable BiConsumer<B, ChildNode> consumer) {
-      this.checkThen();
-      if(this.node == null) {
-        this.node = Node.root();
-      }
-      this.node.add(node);
-      if(consumer != null) {
-        consumer.accept((B) this, node);
-      }
+    public @NonNull B executes(final @NonNull Executable executable) {
+      this.executable = executable;
       return (B) this;
     }
 
-    protected void checkThen() {
+    @Override
+    @SuppressWarnings("unchecked")
+    public @NonNull B redirect(final @NonNull ExecutableNode node) {
+      if(this.node != null) {
+        throw new UnsupportedOperationException("Cannot redirect a node with children");
+      }
+      this.redirect = node;
+      return (B) this;
     }
 
     @Override
-    public final @NonNull N build() {
-      final N node = this.create();
-      if(this.node != null) {
-        this.node.children().forEach(node::add);
+    protected void checkThen() {
+      if(this.redirect != null) {
+        throw new UnsupportedOperationException("Cannot add children to a redirected node");
       }
-      return node;
     }
-
-    abstract @NonNull N create();
   }
 }

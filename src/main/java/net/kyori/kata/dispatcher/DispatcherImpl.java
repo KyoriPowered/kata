@@ -29,6 +29,8 @@ import net.kyori.kata.context.CommandContext;
 import net.kyori.kata.context.CommandStack;
 import net.kyori.kata.exception.CommandException;
 import net.kyori.kata.node.ChildNode;
+import net.kyori.kata.node.ExecutableNode;
+import net.kyori.kata.node.FlagNode;
 import net.kyori.kata.node.LiteralNode;
 import net.kyori.kata.node.Node;
 import net.kyori.kata.node.RootNode;
@@ -111,16 +113,18 @@ final class DispatcherImpl implements Dispatcher {
         throw new DispatcherException.UnknownArgument(result.reader);
       }
     }
-    final ChildNode.@Nullable Executable executable = result.node.executable();
-    if(executable != null) {
-      executable.execute(result.stack.build());
+    if(result.node instanceof ExecutableNode) {
+      final ExecutableNode.@Nullable Executable executable = ((ExecutableNode) result.node).executable();
+      if(executable != null) {
+        executable.execute(result.stack.build());
+      }
     }
   }
 
   @Override
   public @NonNull Map<ChildNode, String> usage(final @NonNull Node node, final @NonNull CommandContext context) {
     final Map<ChildNode, String> result = new LinkedHashMap<>();
-    final boolean optional = node instanceof ChildNode && ((ChildNode) node).executable() != null;
+    final boolean optional = node instanceof ExecutableNode && ((ExecutableNode) node).executable() != null;
     for(final ChildNode child : node.children()) {
       final String usage = this.usage(child, context, optional, false);
       if(usage != null) {
@@ -138,11 +142,11 @@ final class DispatcherImpl implements Dispatcher {
     final String self = optional ? Usage.OPTIONAL_OPEN + node.usage() + Usage.OPTIONAL_CLOSE : node.usage();
 
     if(!deep) {
-      final ChildNode redirect = node.redirect();
+      final ChildNode redirect = node instanceof ExecutableNode ? ((ExecutableNode) node).redirect() : null;
       if(redirect != null) {
         return self + ARGUMENT_SEPARATOR + "-> " + redirect.usage();
       } else {
-        final boolean childOptional = node.executable() != null;
+        final boolean childOptional = !(node instanceof ExecutableNode) || ((ExecutableNode) node).executable() != null;
         final String open = childOptional ? Usage.OPTIONAL_OPEN : Usage.REQUIRED_OPEN;
         final String close = childOptional ? Usage.OPTIONAL_CLOSE : Usage.REQUIRED_CLOSE;
 
@@ -185,7 +189,7 @@ final class DispatcherImpl implements Dispatcher {
       if(!child.canUse(context)) {
         continue;
       }
-      if(this.parse0(results, child, reader.copy(), context, stack.copy())) {
+      if(this.parse0(results, node, child, reader.copy(), context, stack.copy())) {
         break;
       }
     }
@@ -199,7 +203,7 @@ final class DispatcherImpl implements Dispatcher {
     return node instanceof ChildNode ? new Result(reader, stack, (ChildNode) node) : null;
   }
 
-  private boolean parse0(final List<Result> results, final @NonNull ChildNode child, final @NonNull StringReader reader, final @NonNull CommandContext context, final CommandStack.@NonNull Builder stack) throws CommandException {
+  private boolean parse0(final List<Result> results, final @NonNull Node parent, final @NonNull ChildNode child, final @NonNull StringReader reader, final @NonNull CommandContext context, final CommandStack.@NonNull Builder stack) throws CommandException {
     child.parse(stack, context, reader);
 
     if(reader.readable()) {
@@ -216,13 +220,17 @@ final class DispatcherImpl implements Dispatcher {
       if(this.redirect(results, child, reader, context, stack)) {
         return true;
       }
-      results.add(new Result(reader, stack, child));
+      if(parent instanceof ChildNode && child instanceof FlagNode) {
+        results.add(new Result(reader, stack, (ChildNode) parent));
+      } else {
+        results.add(new Result(reader, stack, child));
+      }
     }
     return false;
   }
 
   private boolean redirect(final List<Result> results, final @NonNull ChildNode child, final @NonNull StringReader reader, final @NonNull CommandContext context, final CommandStack.@NonNull Builder stack) throws CommandException {
-    final @Nullable ChildNode redirect = child.redirect();
+    final @Nullable ChildNode redirect = child instanceof ExecutableNode ? ((ExecutableNode) child).redirect() : null;
     if(redirect != null) {
       results.add(this.parse(redirect, reader, context, stack));
       return true;

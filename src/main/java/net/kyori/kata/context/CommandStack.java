@@ -51,6 +51,13 @@ public interface CommandStack {
   @NonNull CommandArguments arguments();
 
   /**
+   * Gets the flags.
+   *
+   * @return the flags
+   */
+  @NonNull CommandFlags flags();
+
+  /**
    * A command stack builder.
    */
   interface Builder {
@@ -68,6 +75,15 @@ public interface CommandStack {
      * @return this builder
      */
     @NonNull Builder literal(final @NonNull StringRange range);
+
+    /**
+     * Adds a flag to the stack.
+     *
+     * @param range the range
+     * @param flag the flag
+     * @return this builder
+     */
+    @NonNull Builder flag(final @NonNull StringRange range, final char flag);
 
     /**
      * Adds an argument to the stack.

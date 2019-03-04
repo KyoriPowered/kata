@@ -23,42 +23,18 @@
  */
 package net.kyori.kata.node;
 
-import net.kyori.kata.context.CommandContext;
-import net.kyori.kata.context.CommandStack;
-import net.kyori.kata.exception.CommandException;
-import net.kyori.string.StringRange;
-import net.kyori.string.StringReader;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * A literal node.
  */
-public interface LiteralNode extends ExecutableNode {
+public interface FlagNode extends ChildNode {
   @Override
-  @NonNull LiteralNode add(final @NonNull ChildNode node);
-
-  @Override
-  default boolean parse(final CommandStack.@NonNull Builder stack, final @NonNull CommandContext context, final @NonNull StringReader reader) throws CommandException {
-    final String name = this.name();
-    if(reader.readable(name.length())) {
-      final int start = reader.index();
-      final int end = start + name.length();
-      if(reader.string(StringRange.between(start, end)).equals(name)) {
-        reader.skip(end - start);
-        if(!reader.readable() || reader.peek() == ' ') {
-          stack.literal(StringRange.between(start, end));
-          return true;
-        } else {
-          reader.index(start);
-        }
-      }
-    }
-    return false;
-  }
+  @NonNull FlagNode add(final @NonNull ChildNode node);
 
   /**
    * A literal node builder.
    */
-  interface Builder extends ExecutableNode.Builder<LiteralNode, Builder> {
+  interface Builder extends ChildNode.Builder<FlagNode, Builder> {
   }
 }

@@ -23,42 +23,64 @@
  */
 package net.kyori.kata.node;
 
-import net.kyori.kata.context.CommandContext;
 import net.kyori.kata.context.CommandStack;
 import net.kyori.kata.exception.CommandException;
-import net.kyori.string.StringRange;
-import net.kyori.string.StringReader;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * A literal node.
+ * A executable node.
  */
-public interface LiteralNode extends ExecutableNode {
+public interface ExecutableNode extends ChildNode {
   @Override
-  @NonNull LiteralNode add(final @NonNull ChildNode node);
+  @NonNull ExecutableNode add(final @NonNull ChildNode node);
 
-  @Override
-  default boolean parse(final CommandStack.@NonNull Builder stack, final @NonNull CommandContext context, final @NonNull StringReader reader) throws CommandException {
-    final String name = this.name();
-    if(reader.readable(name.length())) {
-      final int start = reader.index();
-      final int end = start + name.length();
-      if(reader.string(StringRange.between(start, end)).equals(name)) {
-        reader.skip(end - start);
-        if(!reader.readable() || reader.peek() == ' ') {
-          stack.literal(StringRange.between(start, end));
-          return true;
-        } else {
-          reader.index(start);
-        }
-      }
-    }
-    return false;
+  /**
+   * Gets the redirect.
+   *
+   * @return the redirect
+   */
+  @Nullable ExecutableNode redirect();
+
+  /**
+   * Gets the executable.
+   *
+   * @return the executable
+   */
+  @Nullable Executable executable();
+
+  /**
+   * An executable node builder.
+   */
+  interface Builder<N extends ExecutableNode, B extends Builder<N, B>> extends ChildNode.Builder<N, B> {
+    /**
+     * Sets the executable.
+     *
+     * @param executable the executable
+     * @return this builder
+     */
+    @NonNull B executes(final @NonNull Executable executable);
+
+    /**
+     * Sets the redirect.
+     *
+     * @param target the target node
+     * @return this builder
+     */
+    @NonNull B redirect(final @NonNull ExecutableNode target);
   }
 
   /**
-   * A literal node builder.
+   * An executable.
    */
-  interface Builder extends ExecutableNode.Builder<LiteralNode, Builder> {
+  @FunctionalInterface
+  interface Executable {
+    /**
+     * Executes.
+     *
+     * @param stack the stack
+     * @throws CommandException if an exception is encountered during execution
+     */
+    void execute(final @NonNull CommandStack stack) throws CommandException;
   }
 }

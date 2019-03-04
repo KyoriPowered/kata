@@ -24,6 +24,7 @@
 package net.kyori.kata.context;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import net.kyori.kata.argument.Argument;
 import net.kyori.lambda.Maybe;
 import net.kyori.string.StringRange;
@@ -31,16 +32,20 @@ import net.kyori.string.StringReader;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 final class CommandStackImpl implements CommandStack {
   private final CommandContext context;
   private final CommandArguments arguments;
+  private final CommandFlags flags;
 
-  private CommandStackImpl(final CommandContext context, final CommandArguments arguments) {
+  private CommandStackImpl(final CommandContext context, final CommandArguments arguments, final CommandFlags flags) {
     this.context = context;
     this.arguments = arguments;
+    this.flags = flags;
   }
 
   @Override
@@ -51,6 +56,11 @@ final class CommandStackImpl implements CommandStack {
   @Override
   public @NonNull CommandArguments arguments() {
     return this.arguments;
+  }
+
+  @Override
+  public @NonNull CommandFlags flags() {
+    return this.flags;
   }
 
   static class CommandArgumentsImpl implements CommandArguments {
@@ -91,8 +101,22 @@ final class CommandStackImpl implements CommandStack {
     }
   }
 
+  static class CommandFlagsImpl implements CommandFlags {
+    private final Set<Character> flags;
+
+    CommandFlagsImpl(final Set<Character> flags) {
+      this.flags = flags;
+    }
+
+    @Override
+    public boolean has(final char flag) {
+      return this.flags.contains(flag);
+    }
+  }
+
   static final class Builder implements CommandStack.Builder {
     final Map<Argument<?>, ParsedArgument<?>> arguments = new HashMap<>();
+    final Set<Character> flags = new HashSet<>();
     final CommandContext context;
     StringRange literalRange;
 
@@ -117,6 +141,12 @@ final class CommandStackImpl implements CommandStack {
     }
 
     @Override
+    public @NonNull Builder flag(final @NonNull StringRange range, final char flag) {
+      this.flags.add(flag);
+      return this;
+    }
+
+    @Override
     public <T> @NonNull Builder argument(final @NonNull Argument<T> argument, final @NonNull StringRange range, final @NonNull T value) {
       this.arguments.put(argument, new ParsedArgument<>(range, value));
       return this;
@@ -132,7 +162,7 @@ final class CommandStackImpl implements CommandStack {
 
     @Override
     public @NonNull CommandStack build() {
-      return new CommandStackImpl(this.context, new CommandArgumentsImpl(ImmutableMap.copyOf(this.arguments)));
+      return new CommandStackImpl(this.context, new CommandArgumentsImpl(ImmutableMap.copyOf(this.arguments)), new CommandFlagsImpl(ImmutableSet.copyOf(this.flags)));
     }
   }
 

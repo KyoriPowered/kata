@@ -21,20 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.kyori.kata.node;
+package net.kyori.kata.context;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
-/**
- * An argument node.
- */
-public interface ArgumentNode extends ExecutableNode {
-  @Override
-  @NonNull ArgumentNode add(final @NonNull ChildNode node);
-
-  /**
-   * An argument node builder.
-   */
-  interface Builder extends ExecutableNode.Builder<ArgumentNode, Builder> {
-  }
+public interface CommandFlags {
+  boolean has(final char flag);
 }

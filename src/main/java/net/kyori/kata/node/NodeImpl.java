@@ -32,7 +32,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.IntPredicate;
 import java.util.stream.Stream;
 
@@ -41,6 +43,7 @@ abstract class NodeImpl<N extends Node> implements Node {
   private @MonotonicNonNull Map<String, ChildNode> nodes;
   private @MonotonicNonNull Map<String, LiteralNode> literals;
   private @MonotonicNonNull Map<String, ArgumentNode> arguments;
+  private @MonotonicNonNull Map<String, FlagNode> flags;
 
   @Override
   public @NonNull Collection<? extends ChildNode> children() {
@@ -61,10 +64,20 @@ abstract class NodeImpl<N extends Node> implements Node {
         return Collections.singleton(literal);
       }
     }
+    Set<ChildNode> nodes = null;
     if(this.arguments != null) {
-      return this.arguments.values();
+      if(nodes == null) {
+        nodes = new LinkedHashSet<>();
+      }
+      nodes.addAll(this.arguments.values());
     }
-    return Collections.emptySet();
+    if(this.flags != null) {
+      if(nodes == null) {
+        nodes = new LinkedHashSet<>();
+      }
+      nodes.addAll(this.flags.values());
+    }
+    return nodes == null ? Collections.emptySet() : nodes;
   }
 
   @Override
@@ -78,10 +91,10 @@ abstract class NodeImpl<N extends Node> implements Node {
     if(this.nodes != null) {
       final @Nullable ChildNode target = this.nodes.get(name);
       if(target != null) {
-        if(target != node && target instanceof ChildNodeImpl<?> && node instanceof ChildNodeImpl<?>) {
-          final ChildNode.@Nullable Executable executable = ((ChildNodeImpl) node).executable;
+        if(target != node && target instanceof ExecutableNodeImpl<?> && node instanceof ExecutableNodeImpl<?>) {
+          final ExecutableNode.@Nullable Executable executable = ((ExecutableNodeImpl<?>) node).executable;
           if(executable != null) {
-            ((ChildNodeImpl) target).executable(executable);
+            ((ExecutableNodeImpl<?>) target).executable(executable);
           }
         }
         node.children().forEach(target::add);
@@ -103,6 +116,11 @@ abstract class NodeImpl<N extends Node> implements Node {
         this.arguments = new LinkedHashMap<>(1);
       }
       this.arguments.put(name, (ArgumentNode) node);
+    } else if(node instanceof FlagNode) {
+      if(this.flags == null) {
+        this.flags = new LinkedHashMap<>(1);
+      }
+      this.flags.put(name, (FlagNode) node);
     } else {
       throw new IllegalArgumentException("Don't know how to add a " + node.getClass());
     }
@@ -120,6 +138,10 @@ abstract class NodeImpl<N extends Node> implements Node {
 
     if(this.arguments != null) {
       this.arguments.remove(name);
+    }
+
+    if(this.flags != null) {
+      this.flags.remove(name);
     }
   }
 

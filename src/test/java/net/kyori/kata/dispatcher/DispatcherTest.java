@@ -30,13 +30,16 @@ import net.kyori.kata.exception.CommandException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.common.truth.Truth.assertThat;
 import static net.kyori.kata.node.Node.argument;
+import static net.kyori.kata.node.Node.flag;
 import static net.kyori.kata.node.Node.literal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DispatcherTest {
   private static final Argument<String> THING = StringArgumentType.quoted("thing");
@@ -51,6 +54,18 @@ class DispatcherTest {
   void testUnknownCommand() {
     assertThrows(DispatcherException.UnknownCommand.class, () -> this.dispatcher.execute("", CommandContext.empty()));
     assertThrows(DispatcherException.UnknownCommand.class, () -> this.dispatcher.execute("unknown", CommandContext.empty()));
+  }
+
+  @Test
+  void testWithFlag() throws CommandException {
+    final AtomicBoolean hasFlag = new AtomicBoolean();
+    this.dispatcher.register(
+      literal("foo")
+        .then(flag('b'))
+        .executes(stack -> hasFlag.set(stack.flags().has('b')))
+    );
+    this.dispatcher.execute("foo -b", CommandContext.empty());
+    assertTrue(hasFlag.get());
   }
 
   @Test

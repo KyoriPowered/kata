@@ -67,9 +67,9 @@ class ArgumentNodeTest {
     final AtomicInteger executions = new AtomicInteger();
     final LiteralNode target = literal("target").executes(stack -> executions.incrementAndGet()).build();
     final ArgumentNode argument = argument(Argument.of("foo", this.type)).redirect(target).build();
-    final @Nullable ChildNode redirect = argument.redirect();
+    final @Nullable ExecutableNode redirect = argument.redirect();
     if(redirect != null) {
-      final ChildNode.@Nullable Executable executable = redirect.executable();
+      final ExecutableNode.@Nullable Executable executable = redirect.executable();
       if(executable != null) {
         executable.execute(CommandStack.builder(StringReader.create(""), CommandContext.empty()).build());
       }
@@ -81,7 +81,7 @@ class ArgumentNodeTest {
   void testExecutable() throws CommandException {
     final AtomicInteger executions = new AtomicInteger();
     final ArgumentNode argument = argument(Argument.of("foo", this.type)).executes(stack -> executions.incrementAndGet()).build();
-    final ChildNode.@Nullable Executable executable = argument.executable();
+    final ExecutableNode.@Nullable Executable executable = argument.executable();
     if(executable != null) {
       executable.execute(CommandStack.builder(StringReader.create(""), CommandContext.empty()).build());
     }

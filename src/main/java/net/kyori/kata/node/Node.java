@@ -46,6 +46,16 @@ public interface Node extends Examinable {
   }
 
   /**
+   * Creates a flag node.
+   *
+   * @param flag the name
+   * @return a flag node
+   */
+  static FlagNode.@NonNull Builder flag(final char flag) {
+    return new FlagNodeImpl.Builder(flag);
+  }
+
+  /**
    * Creates a literal node.
    *
    * @param name the name
